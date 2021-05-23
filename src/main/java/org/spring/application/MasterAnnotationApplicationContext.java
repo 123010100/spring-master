@@ -1,5 +1,6 @@
 package org.spring.application;
 
+import org.spring.annotation.Autowired;
 import org.spring.annotation.Component;
 import org.spring.annotation.ComponentScan;
 import org.spring.annotation.Scope;
@@ -8,6 +9,7 @@ import org.spring.definition.BeanDefinition;
 import org.spring.util.ClassHandlerUtil;
 
 import java.io.File;
+import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.net.URL;
 import java.util.Map;
@@ -115,10 +117,21 @@ public class MasterAnnotationApplicationContext implements ApplicationContext {
     // 创建bean对象
     public Object createBean(BeanDefinition beanDefinition) {
         Class<?> clazz = beanDefinition.getClazz();
+
         // 通过无参构造初始化对象
         Object o = null;
         try {
             o = clazz.getDeclaredConstructor().newInstance();
+
+            // 依赖注入 对属性进行赋值
+            for (Field field : clazz.getDeclaredFields()) {
+                // 只针对有自动注入的属性
+                if (field.isAnnotationPresent(Autowired.class)) {
+                    field.setAccessible(true); // 允许对private进行操作
+                    field.set(o, this.getBean(field.getName()));
+                }
+            }
+
         } catch (Exception e) {
             e.printStackTrace();
         }
