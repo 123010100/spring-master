@@ -10,7 +10,6 @@ import org.spring.util.ClassHandlerUtil;
 
 import java.io.File;
 import java.lang.reflect.Field;
-import java.lang.reflect.InvocationTargetException;
 import java.net.URL;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -115,6 +114,7 @@ public class MasterAnnotationApplicationContext implements ApplicationContext {
     }
 
     // 创建bean对象
+    @Override
     public Object createBean(BeanDefinition beanDefinition) {
         Class<?> clazz = beanDefinition.getClazz();
 
