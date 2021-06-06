@@ -6,7 +6,7 @@ import org.spring.annotation.Autowired;
 import org.spring.annotation.Component;
 import org.spring.annotation.Scope;
 
-@Component("userService")
+@Component
 @Scope("prototype")
 @Getter
 @Setter

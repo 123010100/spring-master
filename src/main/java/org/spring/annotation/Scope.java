@@ -8,5 +8,8 @@ import java.lang.annotation.Target;
 @Target(ElementType.TYPE)
 @Retention(RetentionPolicy.RUNTIME)
 public @interface Scope {
+    // Default is singleton
+    // The optional values are singleton or prototype
+    // If it is not a singleton, it must be prototype
     String value() default "singleton";
 }

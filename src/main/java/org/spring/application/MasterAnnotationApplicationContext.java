@@ -1,5 +1,6 @@
 package org.spring.application;
 
+import org.apache.commons.lang3.StringUtils;
 import org.spring.annotation.Autowired;
 import org.spring.annotation.Component;
 import org.spring.annotation.ComponentScan;
@@ -12,6 +13,7 @@ import java.io.File;
 import java.lang.reflect.Field;
 import java.net.URL;
 import java.util.Map;
+import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
 
 
@@ -38,6 +40,7 @@ public class MasterAnnotationApplicationContext implements ApplicationContext {
         // 解析配置类
         // 1.ComponentScan
         ComponentScan componentScan = configClass.getDeclaredAnnotation(ComponentScan.class);
+        if (Objects.isNull(componentScan)) return;
         String[] scanValue = componentScan.value();
 
         // 扫描包下的类
@@ -73,6 +76,12 @@ public class MasterAnnotationApplicationContext implements ApplicationContext {
                         // 开始解析bean
                         Component component = clazz.getDeclaredAnnotation(Component.class);
                         String beanName = component.value();
+
+                        // default beanName
+                        if (StringUtils.isBlank(beanName)) {
+                            // System.out.println("[" + clazz.getTypeName() + "]No defined bean name.");
+                            beanName = StringUtils.uncapitalize(clazz.getSimpleName());
+                        }
 
                         // 为每一个bean初始化一个定义对象
                         BeanDefinition beanDefinition = new BeanDefinition();
@@ -146,7 +155,7 @@ public class MasterAnnotationApplicationContext implements ApplicationContext {
 
         BeanDefinition beanDefinition = beanDefinitionObjects.get(beanName);
         // 单例
-        if (beanDefinition.getScope().equals("singleton")) {
+        if (StringUtils.equals("singleton", beanDefinition.getScope())) {
             return singletonObjects.get(beanName);
         }
 

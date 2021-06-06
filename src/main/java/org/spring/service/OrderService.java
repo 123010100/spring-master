@@ -2,7 +2,7 @@ package org.spring.service;
 
 import org.spring.annotation.Component;
 
-@Component("orderService")
+@Component
 public class OrderService {
 
 }
