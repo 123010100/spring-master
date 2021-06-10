@@ -23,6 +23,8 @@ public class SpringTest {
             System.out.println(userService.getOrderService());
             System.out.println(userService1.getOrderService());
 
+            System.out.println(userService.getBeanName());
+
         } catch (Exception e) {
             System.err.println("Application run error.");
             e.printStackTrace();

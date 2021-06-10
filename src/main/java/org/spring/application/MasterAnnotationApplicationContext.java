@@ -5,13 +5,18 @@ import org.spring.annotation.Autowired;
 import org.spring.annotation.Component;
 import org.spring.annotation.ComponentScan;
 import org.spring.annotation.Scope;
+import org.spring.aware.BeanNameAware;
 import org.spring.context.ApplicationContext;
 import org.spring.definition.BeanDefinition;
+import org.spring.factory.BeanPostProcessor;
+import org.spring.factory.InitializingBean;
 import org.spring.util.ClassHandlerUtil;
 
 import java.io.File;
 import java.lang.reflect.Field;
 import java.net.URL;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
@@ -24,6 +29,8 @@ public class MasterAnnotationApplicationContext implements ApplicationContext {
 
     // bean定义池
     private static ConcurrentHashMap<String, BeanDefinition> beanDefinitionObjects = new ConcurrentHashMap<>();
+
+    private static List<BeanPostProcessor> beanPostProcessorList = new ArrayList<>();
 
     private Class<?> configClass;
 
@@ -72,6 +79,18 @@ public class MasterAnnotationApplicationContext implements ApplicationContext {
                     Class<?> clazz = classLoader.loadClass(clazzPath);
                     // 是否声明了Component注解
                     if (clazz.isAnnotationPresent(Component.class)) {
+
+                        // 是否是一个beanPostProcessor
+                        boolean isAssignableFrom = BeanPostProcessor.class.isAssignableFrom(clazz);
+                        if (isAssignableFrom) {
+                            try {
+                                BeanPostProcessor beanPostProcessor = (BeanPostProcessor) clazz.getDeclaredConstructor().newInstance();
+                                beanPostProcessorList.add(beanPostProcessor);
+                            } catch (Exception e) {
+                                e.printStackTrace();
+                            }
+                        }
+
                         // 当前类为Bean
                         // 开始解析bean
                         Component component = clazz.getDeclaredAnnotation(Component.class);
@@ -125,26 +144,49 @@ public class MasterAnnotationApplicationContext implements ApplicationContext {
     // 创建bean对象
     @Override
     public Object createBean(BeanDefinition beanDefinition) {
+        String beanName = beanDefinition.getBeanName();
         Class<?> clazz = beanDefinition.getClazz();
 
         // 通过无参构造初始化对象
-        Object o = null;
+        Object instance = null;
         try {
-            o = clazz.getDeclaredConstructor().newInstance();
+            // 通过无参构造实例化对象
+            instance = clazz.getDeclaredConstructor().newInstance();
 
             // 依赖注入 对属性进行赋值
             for (Field field : clazz.getDeclaredFields()) {
                 // 只针对有自动注入的属性
                 if (field.isAnnotationPresent(Autowired.class)) {
                     field.setAccessible(true); // 允许对private进行操作
-                    field.set(o, this.getBean(field.getName()));
+                    field.set(instance, this.getBean(field.getName()));
                 }
             }
+
+            // aware
+            if (instance instanceof BeanNameAware) {
+                ((BeanNameAware) instance).setBeanName(beanName);
+            }
+
+            // 初始化前
+            for (BeanPostProcessor beanPostProcessor : beanPostProcessorList) {
+                instance = beanPostProcessor.postProcessBeforeInitialization(instance, beanName);
+            }
+
+            // 初始化
+            if (instance instanceof InitializingBean) {
+                ((InitializingBean) instance).afterPropertiesSet();
+            }
+
+            // 初始化后
+            for (BeanPostProcessor beanPostProcessor : beanPostProcessorList) {
+                instance = beanPostProcessor.postProcessAfterInitialization(instance, beanName);
+            }
+
 
         } catch (Exception e) {
             e.printStackTrace();
         }
-        return o;
+        return instance;
     }
 
     @Override
