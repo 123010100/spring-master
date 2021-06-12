@@ -3,25 +3,19 @@ package org.spring.service;
 import lombok.Getter;
 import org.spring.annotation.Autowired;
 import org.spring.annotation.Component;
-import org.spring.annotation.Scope;
 import org.spring.aware.BeanNameAware;
 import org.spring.factory.InitializingBean;
+import org.spring.proxy.UserService;
 
-@Component
-@Scope("prototype")
+@Component("userService")
+// @Scope("prototype")
 @Getter
-public class UserService implements BeanNameAware, InitializingBean {
+public class UserServiceImpl implements UserService, BeanNameAware, InitializingBean {
 
     @Autowired
     private OrderService orderService;
 
     private String beanName;
-
-    private boolean isProcessor;
-
-    public void setProcessor(boolean processor) {
-        this.isProcessor = processor;
-    }
 
     @Override
     public void setBeanName(String name) {
@@ -30,6 +24,11 @@ public class UserService implements BeanNameAware, InitializingBean {
 
     @Override
     public void afterPropertiesSet() throws Exception {
-        System.out.println(this.getBeanName() + "初始化完成");
+        System.out.println(this.getBeanName() + "初始化");
+    }
+
+    @Override
+    public void test() {
+        System.out.println("beanName=" + beanName);
     }
 }

@@ -81,7 +81,7 @@ public class MasterAnnotationApplicationContext implements ApplicationContext {
                     if (clazz.isAnnotationPresent(Component.class)) {
 
                         // 是否是一个beanPostProcessor
-                        boolean isAssignableFrom = BeanPostProcessor.class.isAssignableFrom(clazz);
+                        /*boolean isAssignableFrom = BeanPostProcessor.class.isAssignableFrom(clazz);
                         if (isAssignableFrom) {
                             try {
                                 BeanPostProcessor beanPostProcessor = (BeanPostProcessor) clazz.getDeclaredConstructor().newInstance();
@@ -89,7 +89,7 @@ public class MasterAnnotationApplicationContext implements ApplicationContext {
                             } catch (Exception e) {
                                 e.printStackTrace();
                             }
-                        }
+                        }*/
 
                         // 当前类为Bean
                         // 开始解析bean
@@ -160,6 +160,13 @@ public class MasterAnnotationApplicationContext implements ApplicationContext {
                     field.setAccessible(true); // 允许对private进行操作
                     field.set(instance, this.getBean(field.getName()));
                 }
+            }
+
+            // 是否是一个beanPostProcessor
+            boolean assignableFrom = BeanPostProcessor.class.isAssignableFrom(clazz);
+            if (assignableFrom) {
+                BeanPostProcessor beanPostProcessor = (BeanPostProcessor) instance;
+                beanPostProcessorList.add(beanPostProcessor);
             }
 
             // aware
